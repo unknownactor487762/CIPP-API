@@ -14,7 +14,7 @@
     #Add rerun protection: This Monitor can only run once every hour.
     $Rerun = Test-CIPPRerun -TenantFilter $TenantFilter -Type 'ExchangeMonitor' -API 'Get-CIPPAlertQuarantineReleaseRequests'
     if ($Rerun) {
-        return $true
+        return
     }
     $HasLicense = Test-CIPPStandardLicense -StandardName 'QuarantineReleaseRequests' -TenantFilter $TenantFilter -RequiredCapabilities @(
         'EXCHANGE_S_STANDARD',
@@ -25,7 +25,7 @@
     )
 
     if (-not $HasLicense) {
-        return $true
+        return
     }
 
     try {
@@ -62,6 +62,7 @@
             Write-AlertTrace -cmdletName $MyInvocation.MyCommand -tenantFilter $TenantFilter -data $AlertData
         }
     } catch {
-        Write-LogMessage -API 'Alerts' -tenant $TenantFilter -message "QuarantineReleaseRequests: $(Get-NormalizedError -message $_.Exception.Message)" -sev Error
+        $ErrorMessage = Get-CippException -Exception $_
+        Write-LogMessage -API 'Alerts' -tenant $TenantFilter -message "QuarantineReleaseRequests: $($ErrorMessage.NormalizedError)" -sev Error -LogData $ErrorMessage
     }
 }
